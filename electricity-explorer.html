@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 7 — Electricity &amp; The Flow of Charge</title>
+<style>
+  :root{
+    --paper:#e9ddc0;
+    --paper-dk:#dccda8;
+    --ink:#2a2320;
+    --brick:#c0432b;
+    --teal:#1f6f6f;
+    --mustard:#d99a2b;
+    --navy:#26405e;
+    --olive:#6f7a3a;
+    --cream:#f4ecd6;
+    --shadow:rgba(42,35,32,.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 20% 15%, rgba(255,255,255,.12), transparent 40%),
+      repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(42,35,32,.015) 3px, rgba(42,35,32,.015) 4px),
+      var(--paper);
+    color:var(--ink);
+    font-family:"Century Gothic","Futura","Trebuchet MS",sans-serif;
+    line-height:1.4;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* ---- Header / chapter banner ---- */
+  header{
+    background:var(--navy);
+    color:var(--cream);
+    padding:18px 26px 20px;
+    border-bottom:6px solid var(--brick);
+    position:relative;
+    box-shadow:0 4px 0 var(--shadow);
+  }
+  header .kicker{
+    font-size:12px; letter-spacing:.32em; text-transform:uppercase;
+    color:var(--mustard); font-weight:bold;
+  }
+  header h1{
+    margin:2px 0 0; font-size:30px; letter-spacing:.01em;
+    font-weight:800; text-shadow:2px 2px 0 rgba(0,0,0,.35);
+  }
+  header .sub{ font-size:13px; color:#c9d4de; margin-top:4px; max-width:640px;}
+  header .plate{
+    position:absolute; top:14px; right:22px;
+    background:var(--brick); color:var(--cream);
+    border:3px solid var(--cream); border-radius:50%;
+    width:64px;height:64px; display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:22px; box-shadow:3px 3px 0 var(--shadow);
+    transform:rotate(-8deg);
+  }
+  /* ---- Layout ---- */
+  .wrap{ display:grid; grid-template-columns:320px 1fr; gap:0; }
+  @media(max-width:900px){ .wrap{grid-template-columns:1fr;} }
+
+  aside{
+    background:var(--paper-dk);
+    border-right:4px solid var(--ink);
+    padding:18px 16px 24px;
+  }
+  main{ padding:18px 20px 10px; min-width:0; }
+
+  .panel{
+    background:var(--cream);
+    border:3px solid var(--ink);
+    border-radius:4px;
+    box-shadow:5px 5px 0 var(--shadow);
+    padding:14px 16px;
+    margin-bottom:18px;
+  }
+  .panel h2{
+    margin:0 0 10px; font-size:15px; text-transform:uppercase; letter-spacing:.1em;
+    color:var(--brick); border-bottom:2px dashed var(--ink); padding-bottom:6px;
+  }
+  .panel h3{ margin:14px 0 6px; font-size:13px; text-transform:uppercase; letter-spacing:.08em; color:var(--navy);}
+
+  /* ---- Controls ---- */
+  label.ctl{ display:block; font-size:13px; font-weight:bold; margin:12px 0 3px; }
+  .val{ float:right; font-family:"Courier New",monospace; background:var(--navy); color:var(--cream);
+        padding:0 6px; border-radius:3px; font-size:12px;}
+  input[type=range]{
+    -webkit-appearance:none; width:100%; height:8px; border-radius:4px;
+    background:linear-gradient(90deg,var(--teal),var(--mustard));
+    border:2px solid var(--ink); outline:none; margin:4px 0 2px;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:22px;height:22px;border-radius:50%;
+    background:var(--brick); border:3px solid var(--ink); cursor:pointer;
+    box-shadow:1px 1px 0 var(--shadow);
+  }
+  input[type=range]:disabled{opacity:.4; filter:grayscale(.6);}
+
+  .segbtns{ display:flex; gap:6px; margin-top:6px;}
+  .segbtns button{
+    flex:1; font-family:inherit; font-weight:bold; font-size:12px; cursor:pointer;
+    padding:8px 4px; border:3px solid var(--ink); border-radius:4px;
+    background:var(--paper); color:var(--ink); box-shadow:2px 2px 0 var(--shadow);
+    text-transform:uppercase; letter-spacing:.04em;
+  }
+  .segbtns button.active{ background:var(--brick); color:var(--cream);}
+  .segbtns button:active{ transform:translate(2px,2px); box-shadow:none;}
+
+  .row{ display:flex; gap:8px; margin-top:10px;}
+  .row button{
+    flex:1; font-family:inherit; font-weight:bold; font-size:12px; cursor:pointer;
+    padding:8px; border:3px solid var(--ink); border-radius:4px;
+    background:var(--teal); color:var(--cream); box-shadow:2px 2px 0 var(--shadow);
+    text-transform:uppercase;
+  }
+  .row button.ghost{ background:var(--paper); color:var(--ink);}
+  .row button:active{ transform:translate(2px,2px); box-shadow:none;}
+
+  /* ---- Meters ---- */
+  .meters{ display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .meter{
+    background:var(--navy); color:var(--cream); border:3px solid var(--ink);
+    border-radius:4px; padding:8px; text-align:center; box-shadow:2px 2px 0 var(--shadow);
+  }
+  .meter .m-lab{ font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--mustard);}
+  .meter .m-val{ font-family:"Courier New",monospace; font-size:22px; font-weight:bold; line-height:1.1;}
+  .meter .m-unit{ font-size:11px; opacity:.8;}
+  .meter.warn{ background:var(--brick); animation:pulse .6s infinite alternate;}
+  @keyframes pulse{ to{ filter:brightness(1.25);} }
+
+  /* ---- Ohm law wheel ---- */
+  .ohm{ text-align:center; font-family:"Courier New",monospace; margin-top:6px;}
+  .ohm .eq{ font-size:16px; margin:4px 0; color:var(--navy); font-weight:bold;}
+  .ohm .eq b{ color:var(--brick);}
+
+  /* ---- Presets ---- */
+  .presets{ display:flex; flex-wrap:wrap; gap:6px;}
+  .presets button{
+    font-family:inherit; font-size:11px; font-weight:bold; cursor:pointer;
+    padding:6px 9px; border:2px solid var(--ink); border-radius:14px;
+    background:var(--mustard); color:var(--ink); box-shadow:2px 2px 0 var(--shadow);
+  }
+  .presets button:active{ transform:translate(2px,2px); box-shadow:none;}
+
+  /* ---- Canvases ---- */
+  .stage{
+    background:var(--cream); border:3px solid var(--ink); border-radius:4px;
+    box-shadow:5px 5px 0 var(--shadow); padding:8px; margin-bottom:16px;
+  }
+  .stage .cap-title{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-size:12px; text-transform:uppercase; letter-spacing:.12em; color:var(--brick);
+    font-weight:bold; margin:2px 4px 6px;
+  }
+  .stage .cap-title span{ color:var(--navy); font-weight:normal; letter-spacing:0; text-transform:none; font-size:12px;}
+  canvas{ display:block; width:100%; border-radius:3px; background:#f7f0dd; }
+
+  .legend{ display:flex; flex-wrap:wrap; gap:14px; font-size:11px; margin:8px 4px 2px; color:var(--ink);}
+  .legend i{ display:inline-block; width:12px;height:12px;border-radius:50%; border:2px solid var(--ink); vertical-align:-2px; margin-right:4px;}
+
+  .explain{ font-size:13px; }
+  .explain p{ margin:6px 0;}
+  .explain .term{ color:var(--brick); font-weight:bold;}
+  .analogy{ background:var(--paper); border-left:5px solid var(--teal); padding:8px 12px; margin-top:10px; font-size:13px; font-style:italic;}
+
+  /* ---- Prompt footer ---- */
+  .promptbox{
+    background:var(--ink); color:var(--cream); border:3px solid var(--ink);
+    border-radius:4px; box-shadow:5px 5px 0 var(--shadow); margin-bottom:26px;
+    overflow:hidden;
+  }
+  .promptbox .ph{ background:var(--brick); padding:8px 14px; display:flex; justify-content:space-between; align-items:center;}
+  .promptbox .ph b{ text-transform:uppercase; letter-spacing:.12em; font-size:12px;}
+  .promptbox #copyBtn{
+    font-family:inherit; font-weight:bold; font-size:11px; cursor:pointer; text-transform:uppercase;
+    padding:6px 12px; border:2px solid var(--cream); border-radius:4px; background:var(--cream); color:var(--ink);
+  }
+  .promptbox #copyBtn:active{ transform:translateY(1px);}
+  .promptbox #promptText{ margin:0; padding:12px 14px; font-family:"Courier New",monospace; font-size:12px; white-space:pre-wrap;}
+
+  .footer-note{ font-size:11px; color:var(--ink); opacity:.7; text-align:center; margin:0 0 30px;}
+  b.k{ color:var(--brick);}
+</style>
+</head>
+<body>
+<header>
+  <div class="kicker">Principles of Physical Science</div>
+  <h1>Electricity &amp; The Flow of Charge</h1>
+  <div class="sub">An interactive laboratory. Turn the dials, watch the electrons, and see how voltage, current, and resistance push and pull on one another.</div>
+  <div class="plate">7</div>
+</header>
+
+<div class="wrap">
+  <!-- ================= SIDEBAR ================= -->
+  <aside>
+    <div class="panel">
+      <h2>Laboratory Controls</h2>
+
+      <label class="ctl">Voltage (the push)
+        <span class="val" id="vVal">6.0 V</span></label>
+      <input type="range" id="voltage" min="0" max="12" step="0.5" value="6">
+
+      <label class="ctl">Resistance (the squeeze)
+        <span class="val" id="rVal">6 Ω</span></label>
+      <input type="range" id="resistance" min="1" max="60" step="1" value="6">
+
+      <h3>Component in the circuit</h3>
+      <div class="segbtns" id="compBtns">
+        <button data-comp="wire" class="active">Plain Wire</button>
+        <button data-comp="resistor">Resistor</button>
+        <button data-comp="capacitor">Capacitor</button>
+      </div>
+
+      <div class="row">
+        <button id="playBtn">Pause</button>
+        <button id="resetBtn" class="ghost">Reset</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Meters</h2>
+      <div class="meters">
+        <div class="meter"><div class="m-lab">Voltage</div><div class="m-val" id="mV">6.0</div><div class="m-unit">volts (V)</div></div>
+        <div class="meter" id="ampMeter"><div class="m-lab">Current</div><div class="m-val" id="mI">1.00</div><div class="m-unit">amps (A)</div></div>
+        <div class="meter"><div class="m-lab">Resistance</div><div class="m-val" id="mR">6</div><div class="m-unit">ohms (Ω)</div></div>
+        <div class="meter"><div class="m-lab">Power</div><div class="m-val" id="mP">6.0</div><div class="m-unit">watts (W)</div></div>
+      </div>
+      <div class="ohm">
+        <div class="eq">Ohm's Law &nbsp; <b>I</b> = <b>V</b> ÷ <b>R</b></div>
+        <div class="eq" id="ohmCalc">1.00 A = 6.0 V ÷ 6 Ω</div>
+        <div class="eq">Power &nbsp; <b>P</b> = <b>V</b> × <b>I</b></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Field Notes</h2>
+      <div class="presets" id="presets">
+        <button data-p="dead">Dead battery</button>
+        <button data-p="flashlight">Flashlight</button>
+        <button data-p="short">Short circuit!</button>
+        <button data-p="heater">Space heater</button>
+        <button data-p="charge">Charge a cap</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ================= MAIN ================= -->
+  <main>
+    <div class="stage">
+      <div class="cap-title">Fig. 7·1 — The Complete Circuit <span id="circuitCaption">Electrons stream from – to +, driven by the cell.</span></div>
+      <canvas id="circuit" width="900" height="380"></canvas>
+      <div class="legend">
+        <span><i style="background:#2a6ff0"></i>Electron (– charge)</span>
+        <span><i style="background:#d99a2b"></i>Metal ion (fixed + core)</span>
+        <span><i style="background:#c0432b"></i>Heat from collisions</span>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="cap-title">Fig. 7·2 — Zoom Into the Metal <span id="molCaption">Inside the conductor: free electrons drift through a lattice of ions.</span></div>
+      <canvas id="molecular" width="900" height="240"></canvas>
+    </div>
+
+    <div class="panel explain" id="explainPanel">
+      <h2 id="explainTitle">What Am I Looking At?</h2>
+      <div id="explainBody">
+        <p><span class="term">Voltage (V)</span> is the electrical <em>pressure</em> the battery supplies — how hard it pushes charge around the loop.</p>
+        <p><span class="term">Current (I)</span> is the <em>rate of flow</em> of charge, measured in amps. One amp ≈ 6.24 × 10¹⁸ electrons passing a point every second.</p>
+        <p><span class="term">Resistance (R)</span> opposes the flow. Electrons collide with the vibrating metal ions, giving up energy as heat.</p>
+        <p><span class="term">Power (P)</span> is energy delivered per second — what lights the bulb or warms the wire.</p>
+        <div class="analogy" id="analogy">💧 <b>Water analogy:</b> Voltage is the height of the tank, current is how much water flows, resistance is a narrow pipe. Raise the tank (voltage) or widen the pipe (lower resistance) and more water flows.</div>
+      </div>
+    </div>
+
+    <div class="promptbox">
+      <div class="ph"><b>Take it further with Claude</b><button id="copyBtn">Copy</button></div>
+      <pre id="promptText"></pre>
+    </div>
+
+    <p class="footer-note">Fig. 7 · Interactive plate · Adjust the dials above, then copy the prompt to dig deeper.</p>
+  </main>
+</div>
+
+<script>
+/* ============================================================
+   STATE
+   ============================================================ */
+const DEFAULTS = { voltage:6, resistance:6, comp:'wire' };
+const state = { voltage:6, resistance:6, comp:'wire', playing:true };
+
+// capacitor sub-state (charge fraction 0..1)
+let capCharge = 0;
+
+/* derived electrical values -------------------------------- */
+function electrical(){
+  const V = state.voltage;
+  let R = state.resistance;
+  let I, note;
+  if(state.comp === 'capacitor'){
+    // charging current decays as cap fills: I = (V/R)*(1-charge)
+    I = (R>0 ? V/R : 0) * (1 - capCharge);
+    return { V, R, I, P:V*I, capV: V*capCharge };
+  }
+  I = R>0 ? V/R : 0;
+  return { V, R, I, P:V*I };
+}
+
+/* ============================================================
+   CANVAS SETUP  (handle devicePixelRatio for crispness)
+   ============================================================ */
+function fitCanvas(cv){
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = cv.clientWidth || cv.width;
+  const ratio = cv.height / cv.width;         // keep drawing aspect
+  const cssH = cssW * ratio;
+  cv.style.height = cssH + 'px';
+  cv.width  = Math.round(cssW * dpr);
+  cv.height = Math.round(cssH * dpr);
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  return { ctx, W:cssW, H:cssH };
+}
+
+const circuitCv = document.getElementById('circuit');
+const molCv = document.getElementById('molecular');
+let C, M;
+function relayout(){ C = fitCanvas(circuitCv); M = fitCanvas(molCv); buildPath(); }
+window.addEventListener('resize', relayout);
+
+/* ============================================================
+   CIRCUIT PATH  (rectangular loop; component sits on top edge)
+   Electrons travel along this polyline by arc-length.
+   ============================================================ */
+let PATH = [], PATHLEN = 0, SEGLEN = [];
+let compSpan = {start:0,end:0};   // arc-length window occupied by the component (top edge middle)
+
+function buildPath(){
+  const W = C.W, H = C.H;
+  const m = 46;                       // margin
+  const x0=m, x1=W-m, y0=m+8, y1=H-m;
+  // Loop clockwise starting bottom-left (battery sits on left edge)
+  // Points: BL -> TL -> TR -> BR -> BL
+  PATH = [
+    {x:x0,y:y1},{x:x0,y:y0},          // up the left side (battery here)
+    {x:x1,y:y0},                      // across the top (component here)
+    {x:x1,y:y1},                      // down the right
+    {x:x0,y:y1}                       // back across bottom
+  ];
+  SEGLEN=[]; PATHLEN=0;
+  for(let i=0;i<PATH.length-1;i++){
+    const dx=PATH[i+1].x-PATH[i].x, dy=PATH[i+1].y-PATH[i].y;
+    const L=Math.hypot(dx,dy); SEGLEN.push(L); PATHLEN+=L;
+  }
+  // top edge is segment index 1 (TL->TR). Component occupies middle third.
+  let accum=0;
+  for(let i=0;i<1;i++) accum+=SEGLEN[i];
+  const topStart=accum, topLen=SEGLEN[1];
+  compSpan.start = topStart + topLen*0.38;
+  compSpan.end   = topStart + topLen*0.62;
+}
+
+function posAt(d){                    // arc-length -> {x,y, seg}
+  d = ((d % PATHLEN)+PATHLEN)%PATHLEN;
+  let acc=0;
+  for(let i=0;i<SEGLEN.length;i++){
+    if(d <= acc+SEGLEN[i]){
+      const t=(d-acc)/SEGLEN[i];
+      return { x:PATH[i].x+(PATH[i+1].x-PATH[i].x)*t,
+               y:PATH[i].y+(PATH[i+1].y-PATH[i].y)*t, seg:i };
+    }
+    acc+=SEGLEN[i];
+  }
+  return {...PATH[PATH.length-1], seg:SEGLEN.length-1};
+}
+
+/* electrons distributed evenly along the loop ------------- */
+const N_ELECTRONS = 46;
+let electrons = [];
+function seedElectrons(){
+  electrons = [];
+  for(let i=0;i<N_ELECTRONS;i++){
+    electrons.push({ d:(i/N_ELECTRONS)*PATHLEN, jitter:Math.random()*Math.PI*2 });
+  }
+}
+
+/* ============================================================
+   DRAW: CIRCUIT
+   ============================================================ */
+function drawCircuit(dt){
+  const {ctx,W,H} = C;
+  const e = electrical();
+  ctx.clearRect(0,0,W,H);
+
+  // --- paper vignette
+  const g=ctx.createRadialGradient(W/2,H/2,80,W/2,H/2,W*0.7);
+  g.addColorStop(0,'#f9f3e2'); g.addColorStop(1,'#efe6cf');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+
+  // --- wire (thick acrylic outline)
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  ctx.strokeStyle='#2a2320'; ctx.lineWidth=13;
+  wirePath(ctx); ctx.stroke();
+  ctx.strokeStyle='#c9a24a'; ctx.lineWidth=7;      // copper core
+  wirePath(ctx); ctx.stroke();
+  ctx.strokeStyle='#e7c877'; ctx.lineWidth=2.5;    // highlight
+  wirePath(ctx); ctx.stroke();
+
+  drawBattery(ctx);
+  drawComponent(ctx, e);
+
+  // --- electrons
+  const current = e.I;
+  const maxSpeed = 240;                 // px/s at big current
+  const speed = Math.min(maxSpeed, current*46) ;     // scale
+  const dir = -1;                       // travel from - (bottom-left up) around; visually clockwise = negative? we move +d
+  if(state.playing){
+    for(const el of electrons){
+      el.d += speed*dt;
+      el.jitter += dt*6;
+    }
+    if(state.comp==='capacitor'){
+      // fill the cap
+      const rate = state.resistance>0 ? (1/(state.resistance*0.9)) : 5;
+      capCharge = Math.min(1, capCharge + rate*dt*0.35);
+    }
+  }
+  for(const el of electrons){
+    // In capacitor mode, electrons cannot cross the gap: park them approaching the plates
+    let d = el.d;
+    if(state.comp==='capacitor'){
+      d = parkAtCapacitor(el);
+    }
+    const p = posAt(d);
+    const jx = Math.cos(el.jitter)*1.2, jy=Math.sin(el.jitter*1.3)*1.2;
+    // brighter/faster => slight trail
+    ctx.beginPath();
+    ctx.fillStyle='#2a6ff0';
+    ctx.arc(p.x+jx, p.y+jy, 5.4, 0, Math.PI*2); ctx.fill();
+    ctx.lineWidth=1.5; ctx.strokeStyle='#12336f'; ctx.stroke();
+    // minus sign
+    ctx.strokeStyle='#dce9ff'; ctx.lineWidth=1.6;
+    ctx.beginPath(); ctx.moveTo(p.x+jx-2.3,p.y+jy); ctx.lineTo(p.x+jx+2.3,p.y+jy); ctx.stroke();
+  }
+
+  // "no flow" stamp
+  if(current < 0.001){
+    stamp(ctx, W/2, H-24, 'NO CURRENT — open the tap');
+  }
+}
+function wirePath(ctx){
+  ctx.beginPath();
+  ctx.moveTo(PATH[0].x,PATH[0].y);
+  for(let i=1;i<PATH.length;i++) ctx.lineTo(PATH[i].x,PATH[i].y);
+}
+
+/* battery on the left edge (between BL and TL, at mid-height) */
+function drawBattery(ctx){
+  const p = posAt(SEGLEN[0]*0.5);      // midpoint of left segment
+  const cx=p.x, cy=p.y;
+  ctx.save(); ctx.translate(cx,cy);
+  // body plate
+  ctx.fillStyle='#26405e'; ctx.strokeStyle='#2a2320'; ctx.lineWidth=3;
+  roundRect(ctx,-16,-34,32,68,6); ctx.fill(); ctx.stroke();
+  // terminals: long line (+) up, short (-) down
+  ctx.strokeStyle='#f4ecd6'; ctx.lineWidth=4;
+  ctx.beginPath(); ctx.moveTo(-9,-16); ctx.lineTo(9,-16); ctx.stroke();     // + plate long
+  ctx.beginPath(); ctx.moveTo(-5,12); ctx.lineTo(5,12); ctx.stroke();       // - plate short
+  ctx.fillStyle='#f4ecd6'; ctx.font='bold 16px Courier New';
+  ctx.fillText('+', 20,-18); ctx.fillText('–', 22,20);
+  ctx.restore();
+  // label
+  ctx.fillStyle='#26405e'; ctx.font='bold 11px Century Gothic';
+  ctx.fillText('CELL '+state.voltage.toFixed(1)+'V', cx-48, cy+52);
+}
+
+/* the swappable component on the top edge middle */
+function drawComponent(ctx, e){
+  const a=posAt(compSpan.start), b=posAt(compSpan.end);
+  const cx=(a.x+b.x)/2, cy=(a.y+b.y)/2;
+  if(state.comp==='wire'){
+    ctx.fillStyle='#6f7a3a'; ctx.font='bold 11px Century Gothic';
+    ctx.textAlign='center'; ctx.fillText('(plain conductor)', cx, cy-16); ctx.textAlign='left';
+    return;
+  }
+  if(state.comp==='resistor'){
+    // zig-zag resistor body with heat glow ~ power
+    const heat = Math.min(1, e.P/24);
+    if(heat>0.02){
+      const rg=ctx.createRadialGradient(cx,cy,2,cx,cy,54);
+      rg.addColorStop(0,`rgba(220,70,40,${0.15+heat*0.6})`);
+      rg.addColorStop(1,'rgba(220,70,40,0)');
+      ctx.fillStyle=rg; ctx.fillRect(cx-60,cy-60,120,120);
+    }
+    ctx.strokeStyle='#2a2320'; ctx.lineWidth=8;
+    zig(ctx,a.x,a.y,b.x,b.y,cy);
+    ctx.strokeStyle= heat>0.5 ? '#e2582f' : '#b07a2a'; ctx.lineWidth=4;
+    zig(ctx,a.x,a.y,b.x,b.y,cy);
+    ctx.fillStyle='#2a2320'; ctx.font='bold 11px Century Gothic'; ctx.textAlign='center';
+    ctx.fillText(state.resistance+' Ω', cx, cy-30); ctx.textAlign='left';
+    return;
+  }
+  if(state.comp==='capacitor'){
+    // two plates with a gap; charge shown as +/- pile-up
+    const gap=18, plateH=44;
+    const lx=cx-gap/2, rx=cx+gap/2;
+    ctx.strokeStyle='#2a2320'; ctx.lineWidth=7;
+    // leads
+    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(lx,cy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(rx,cy); ctx.lineTo(b.x,b.y); ctx.stroke();
+    // plates
+    ctx.lineWidth=6; ctx.strokeStyle='#26405e';
+    ctx.beginPath(); ctx.moveTo(lx,cy-plateH/2); ctx.lineTo(lx,cy+plateH/2); ctx.stroke();
+    ctx.strokeStyle='#c0432b';
+    ctx.beginPath(); ctx.moveTo(rx,cy-plateH/2); ctx.lineTo(rx,cy+plateH/2); ctx.stroke();
+    // charge symbols scale with capCharge
+    const nSym=Math.round(capCharge*4);
+    ctx.font='bold 13px Courier New'; ctx.textAlign='center';
+    ctx.fillStyle='#26405e';
+    for(let i=0;i<nSym;i++) ctx.fillText('–', lx-9, cy-plateH/2+8+i*11);
+    ctx.fillStyle='#c0432b';
+    for(let i=0;i<nSym;i++) ctx.fillText('+', rx+9, cy-plateH/2+8+i*11);
+    ctx.fillStyle='#2a2320'; ctx.font='bold 11px Century Gothic';
+    ctx.fillText('CAPACITOR', cx, cy-34);
+    ctx.fillText(Math.round(capCharge*100)+'% charged', cx, cy+plateH/2+16);
+    ctx.textAlign='left';
+    return;
+  }
+}
+function zig(ctx,ax,ay,bx,by,cy){
+  const n=6; ctx.beginPath(); ctx.moveTo(ax,ay);
+  for(let i=1;i<n;i++){
+    const t=i/n, x=ax+(bx-ax)*t;
+    const y=cy+(i%2? -12:12);
+    ctx.lineTo(x,y);
+  }
+  ctx.lineTo(bx,by); ctx.stroke();
+}
+
+/* keep electrons from crossing an (open) charged capacitor */
+function parkAtCapacitor(el){
+  // squeeze electrons toward the plate they approach; leave a gap window empty
+  let d = ((el.d % PATHLEN)+PATHLEN)%PATHLEN;
+  const s=compSpan.start, en=compSpan.end;
+  if(d>s && d<en){
+    // inside the gap -> push to nearest plate depending on which half
+    const mid=(s+en)/2;
+    d = d<mid ? s-2 : en+2;
+  }
+  return d;
+}
+
+/* ============================================================
+   DRAW: MOLECULAR ZOOM
+   ============================================================ */
+let molElectrons=[];
+function seedMol(){
+  molElectrons=[];
+  const {W,H}=M;
+  for(let i=0;i<34;i++){
+    molElectrons.push({ x:Math.random()*W, y:20+Math.random()*(H-40),
+                        vy:(Math.random()-.5)*20, ph:Math.random()*6.28 });
+  }
+}
+function drawMolecular(dt){
+  const {ctx,W,H}=M;
+  const e=electrical();
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#f7f0dd'; ctx.fillRect(0,0,W,H);
+
+  // resistor region highlight (denser lattice + heat) if resistor chosen
+  const resistive = state.comp==='resistor';
+  if(resistive){
+    const rx0=W*0.40, rx1=W*0.60;
+    const heat=Math.min(1,e.P/24);
+    ctx.fillStyle=`rgba(220,70,40,${0.06+heat*0.22})`;
+    ctx.fillRect(rx0,0,rx1-rx0,H);
+    ctx.fillStyle='#8a3a26'; ctx.font='bold 10px Century Gothic'; ctx.textAlign='center';
+    ctx.fillText('RESISTIVE ZONE — tighter lattice, more collisions', (rx0+rx1)/2, 14);
+    ctx.textAlign='left';
+  }
+
+  // ion lattice (fixed + cores) that thermally jiggle; jiggle grows with power (heat)
+  const cols=14, rows=3;
+  const jig = 1 + Math.min(4, e.P*0.25);
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      let baseX=(c+0.5)*(W/cols);
+      const baseY=(r+0.5)*(H/rows);
+      // denser lattice in resistive zone: pull ions toward center band
+      if(resistive && baseX>W*0.40 && baseX<W*0.60){
+        // add extra ions handled below; here just mark
+      }
+      const t=performance._t||0;
+      const jx=Math.sin(t*3 + c*1.3 + r)*jig;
+      const jy=Math.cos(t*2.6 + r*1.7 + c)*jig;
+      drawIon(ctx, baseX+jx, baseY+jy, e.P);
+    }
+  }
+  // extra ions to visualize a denser resistive lattice
+  if(resistive){
+    for(let r=0;r<rows;r++) for(let c=0;c<3;c++){
+      const baseX=W*0.42 + c*(W*0.16/3)+ (W*0.16/6);
+      const baseY=(r+0.5)*(H/rows)+ (H/rows)/2*0 + 14;
+      const t=performance._t||0;
+      drawIon(ctx, baseX+Math.sin(t*3+c)*jig, baseY+Math.cos(t*2+r)*jig, e.P);
+    }
+  }
+
+  // field arrow (voltage direction) top
+  if(e.V>0){
+    ctx.strokeStyle='#26405e'; ctx.lineWidth=2;
+    ctx.fillStyle='#26405e';
+    ctx.font='bold 10px Century Gothic';
+    ctx.fillText('◄ ELECTRIC FIELD  (electrons drift this way ►)', 10, H-8);
+  }
+
+  // free electrons: net drift speed ∝ current, plus thermal random motion
+  const drift = Math.min(150, e.I*30);   // px/s to the right (conventional current left, electrons right)
+  for(const m of molElectrons){
+    if(state.playing){
+      m.x += drift*dt + Math.sin(m.ph)*8*dt;   // drift + wiggle
+      m.y += m.vy*dt;
+      m.ph += dt*10;
+      // thermal bounce
+      if(m.y<16){m.y=16;m.vy*=-1;} if(m.y>H-16){m.y=H-16;m.vy*=-1;}
+      // random collisions (more likely in resistive zone) redirect vy
+      let collideChance = 0.4;
+      if(resistive && m.x>W*0.40 && m.x<W*0.60) collideChance=1.6;
+      if(Math.sin(m.ph*2.1)>0.985 || Math.random()<collideChance*dt){
+        m.vy=(Math.random()-.5)*40;
+        // collision in resistive zone briefly flashes heat
+      }
+      if(m.x>W+6) m.x=-6;                // wrap
+    }
+    ctx.beginPath(); ctx.fillStyle='#2a6ff0';
+    ctx.arc(m.x,m.y,5,0,6.28); ctx.fill();
+    ctx.lineWidth=1.3; ctx.strokeStyle='#12336f'; ctx.stroke();
+  }
+
+  if(e.I<0.001){
+    ctx.fillStyle='rgba(120,110,90,.8)'; ctx.font='bold 12px Century Gothic';
+    ctx.textAlign='center';
+    ctx.fillText('No push → electrons only jiggle in place (thermal motion), no net drift.', W/2, H/2);
+    ctx.textAlign='left';
+  }
+}
+function drawIon(ctx,x,y,power){
+  ctx.beginPath();
+  ctx.fillStyle='#d99a2b'; ctx.arc(x,y,9,0,6.28); ctx.fill();
+  ctx.lineWidth=2; ctx.strokeStyle='#8a5a12'; ctx.stroke();
+  ctx.fillStyle='#5a3a08'; ctx.font='bold 11px Courier New'; ctx.textAlign='center';
+  ctx.fillText('+', x, y+4); ctx.textAlign='left';
+}
+
+/* ============================================================
+   SHARED DRAW HELPERS
+   ============================================================ */
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+}
+function stamp(ctx,x,y,txt){
+  ctx.save(); ctx.translate(x,y); ctx.rotate(-0.05);
+  ctx.strokeStyle='#c0432b'; ctx.lineWidth=2; ctx.font='bold 13px Century Gothic';
+  const w=ctx.measureText(txt).width+18;
+  ctx.strokeRect(-w/2,-16,w,24);
+  ctx.fillStyle='#c0432b'; ctx.textAlign='center'; ctx.fillText(txt,0,1); ctx.textAlign='left';
+  ctx.restore();
+}
+
+/* ============================================================
+   ANIMATION LOOP
+   ============================================================ */
+let last=0;
+function loop(ts){
+  const t=ts/1000;
+  const dt=Math.min(0.05, last? t-last:0.016); last=t;
+  performance._t = t;
+  drawCircuit(dt);
+  drawMolecular(dt);
+  requestAnimationFrame(loop);
+}
+
+/* ============================================================
+   UI SYNC
+   ============================================================ */
+const el = id=>document.getElementById(id);
+function updateMeters(){
+  const e=electrical();
+  el('vVal').textContent = state.voltage.toFixed(1)+' V';
+  el('rVal').textContent = state.resistance+' Ω';
+  el('mV').textContent = e.V.toFixed(1);
+  el('mI').textContent = e.I.toFixed(2);
+  el('mR').textContent = e.R;
+  el('mP').textContent = e.P.toFixed(1);
+  el('ohmCalc').textContent = `${e.I.toFixed(2)} A = ${e.V.toFixed(1)} V ÷ ${e.R} Ω`;
+  // over-current warning (short circuit)
+  const amp=el('ampMeter');
+  if(e.I>4){ amp.classList.add('warn'); } else { amp.classList.remove('warn'); }
+  updateCaptions(e);
+  updatePrompt();
+}
+function updateCaptions(e){
+  const cc=el('circuitCaption'), mc=el('molCaption');
+  if(e.I<0.001){ cc.textContent='Circuit is open / no push — nothing flows.'; }
+  else if(e.I>4){ cc.textContent='Huge current! Very low resistance = a near short circuit.'; }
+  else { cc.textContent='Electrons stream around the loop, driven by the cell.'; }
+
+  if(state.comp==='resistor'){ mc.textContent='Resistor: a tight lattice forces more collisions → electrical energy becomes heat.'; }
+  else if(state.comp==='capacitor'){ mc.textContent='Capacitor: charge piles on the plates. Once full, DC current stops.'; }
+  else if(e.I<0.001){ mc.textContent='No field, no drift — electrons only jiggle thermally in place.'; }
+  else { mc.textContent='Free electrons drift slowly one way while jiggling randomly (thermal motion).'; }
+}
+
+/* ---- controls ---- */
+el('voltage').addEventListener('input',e=>{ state.voltage=+e.target.value; if(state.comp==='capacitor') capCharge=0; updateMeters(); });
+el('resistance').addEventListener('input',e=>{ state.resistance=+e.target.value; if(state.comp==='capacitor') capCharge=0; updateMeters(); });
+
+document.querySelectorAll('#compBtns button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('#compBtns button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    state.comp=b.dataset.comp;
+    capCharge=0;
+    updateMeters();
+  });
+});
+
+el('playBtn').addEventListener('click',()=>{
+  state.playing=!state.playing;
+  el('playBtn').textContent = state.playing?'Pause':'Play';
+});
+el('resetBtn').addEventListener('click',()=>{
+  state.voltage=DEFAULTS.voltage; state.resistance=DEFAULTS.resistance; state.comp=DEFAULTS.comp;
+  capCharge=0; state.playing=true; el('playBtn').textContent='Pause';
+  el('voltage').value=DEFAULTS.voltage; el('resistance').value=DEFAULTS.resistance;
+  document.querySelectorAll('#compBtns button').forEach(x=>x.classList.toggle('active',x.dataset.comp==='wire'));
+  seedElectrons(); seedMol(); updateMeters();
+});
+
+/* ---- presets ---- */
+const PRESETS={
+  dead:      {v:0.5,r:6, c:'wire'},
+  flashlight:{v:3,  r:6, c:'wire'},
+  short:     {v:9,  r:1, c:'wire'},
+  heater:    {v:12, r:8, c:'resistor'},
+  charge:    {v:9,  r:10,c:'capacitor'},
+};
+document.querySelectorAll('#presets button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    const p=PRESETS[b.dataset.p]; if(!p) return;
+    state.voltage=p.v; state.resistance=p.r; state.comp=p.c; capCharge=0; state.playing=true;
+    el('playBtn').textContent='Pause';
+    el('voltage').value=p.v; el('resistance').value=p.r;
+    document.querySelectorAll('#compBtns button').forEach(x=>x.classList.toggle('active',x.dataset.comp===p.c));
+    updateMeters();
+  });
+});
+
+/* ============================================================
+   PROMPT OUTPUT
+   ============================================================ */
+function updatePrompt(){
+  const e=electrical();
+  const parts=[];
+  parts.push(`I'm exploring an interactive circuit that teaches basic electricity.`);
+  parts.push(`Right now the cell supplies ${e.V.toFixed(1)} V, resistance is ${e.R} Ω, giving a current of ${e.I.toFixed(2)} A and ${e.P.toFixed(1)} W of power (Ohm's law I = V/R).`);
+
+  if(state.comp==='resistor'){
+    parts.push(`The circuit has a resistor in it, and I can see it glowing with heat as power rises.`);
+    parts.push(`Explain what's physically happening in the metal: why do electron collisions with the vibrating ion lattice turn electrical energy into heat, and how does that relate to P = I²R?`);
+  } else if(state.comp==='capacitor'){
+    parts.push(`The circuit has a capacitor that charges up (currently ${Math.round(capCharge*100)}% charged) and then stops the current.`);
+    parts.push(`Explain how a capacitor stores charge on its plates, why it blocks steady DC once full, what the time constant τ = RC means, and how it behaves differently with AC.`);
+  } else {
+    parts.push(`It's a plain conductor right now.`);
+    if(e.I>4) parts.push(`The current is very high because resistance is tiny — close to a short circuit.`);
+    if(e.I<0.001) parts.push(`There's essentially no current because the push is near zero.`);
+    parts.push(`Explain, at the molecular level, the difference between the slow electron drift velocity and the near-instant propagation of the electrical signal, and why raising voltage or lowering resistance increases current.`);
+  }
+  parts.push(`Keep it at an introductory level with a concrete real-world analogy, and suggest one experiment I could try with these dials to see the effect.`);
+
+  el('promptText').textContent = parts.join('\n\n');
+}
+
+el('copyBtn').addEventListener('click',()=>{
+  navigator.clipboard.writeText(el('promptText').textContent).then(()=>{
+    const b=el('copyBtn'); const o=b.textContent; b.textContent='Copied!';
+    setTimeout(()=>b.textContent=o,1200);
+  });
+});
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+relayout(); seedElectrons(); seedMol(); updateMeters();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

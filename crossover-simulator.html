@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✨ Rainbow Crossover Lab ✨ — 2-Way Passive Speaker Simulator</title>
+<style>
+  :root{
+    --pink:#ff2fb9;
+    --pink-lt:#ff8fe0;
+    --purple:#8b3cff;
+    --cyan:#00e0ff;
+    --lime:#8dff2f;
+    --yellow:#ffe300;
+    --orange:#ff7a3c;
+    --ink:#3a1150;
+    --paper:#ffffff;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"Comic Sans MS","Chalkboard SE","Marker Felt",system-ui,sans-serif;
+    color:var(--ink);
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 12% 8%, rgba(255,255,255,.5), transparent 30%),
+      linear-gradient(125deg,#ff2fb9 0%, #8b3cff 32%, #00e0ff 62%, #8dff2f 100%);
+    background-attachment:fixed;
+  }
+  /* sparkle overlay */
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.5;
+    background-image:
+      radial-gradient(2px 2px at 20% 30%, #fff, transparent),
+      radial-gradient(2px 2px at 70% 65%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 40% 80%, #fff, transparent),
+      radial-gradient(2px 2px at 85% 20%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 55% 15%, #fff, transparent);
+  }
+  header{
+    position:relative; z-index:1; text-align:center; padding:20px 16px 10px;
+  }
+  header h1{
+    margin:0; font-size:34px; color:#fff;
+    text-shadow: 2px 2px 0 var(--pink), 4px 4px 0 var(--purple), 0 0 18px rgba(255,255,255,.6);
+    letter-spacing:.02em;
+  }
+  header p{ margin:6px 0 0; color:#fff; font-size:14px; text-shadow:1px 1px 2px rgba(0,0,0,.3);}
+
+  .wrap{ position:relative; z-index:1; display:grid; grid-template-columns:340px 1fr; gap:16px; padding:12px 18px 30px;}
+  @media(max-width:980px){ .wrap{grid-template-columns:1fr;} }
+
+  .card{
+    background:var(--paper);
+    border:4px solid var(--purple);
+    border-radius:22px;
+    box-shadow:0 0 0 4px var(--cyan), 8px 8px 0 rgba(139,60,255,.35);
+    padding:16px 16px 18px;
+    margin-bottom:16px;
+  }
+  .card h2{
+    margin:0 0 12px; font-size:17px; color:var(--pink);
+    text-shadow:1px 1px 0 rgba(139,60,255,.25);
+    border-bottom:3px dotted var(--cyan); padding-bottom:7px;
+  }
+  .card h3{ margin:16px 0 4px; font-size:13px; color:var(--purple); text-transform:uppercase; letter-spacing:.06em;}
+
+  label.ctl{ display:block; font-size:13px; font-weight:bold; margin:11px 0 2px; color:var(--ink);}
+  .val{ float:right; font-family:"Courier New",monospace; font-weight:bold;
+        background:var(--purple); color:#fff; padding:0 7px; border-radius:8px; font-size:12px;}
+  input[type=range]{
+    -webkit-appearance:none; width:100%; height:10px; border-radius:8px; outline:none; margin:5px 0 2px;
+    background:linear-gradient(90deg,var(--pink),var(--yellow),var(--cyan),var(--lime));
+    border:2px solid var(--ink);
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:24px;height:24px;border-radius:50%;
+    background:radial-gradient(circle at 30% 30%,#fff,var(--pink));
+    border:3px solid var(--purple); cursor:pointer; box-shadow:0 0 8px var(--pink);
+  }
+  input[type=range]:disabled{ opacity:.4; filter:grayscale(.7);}
+
+  .segbtns{ display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;}
+  .segbtns button{
+    flex:1; min-width:64px; font-family:inherit; font-weight:bold; font-size:12px; cursor:pointer;
+    padding:8px 5px; border:3px solid var(--purple); border-radius:14px;
+    background:#fff; color:var(--purple); transition:transform .05s;
+  }
+  .segbtns button.active{ background:linear-gradient(120deg,var(--pink),var(--purple)); color:#fff; border-color:var(--ink);}
+  .segbtns button:active{ transform:scale(.94);}
+
+  .num{ display:flex; align-items:center; gap:6px; margin:7px 0; font-size:13px; font-weight:bold;}
+  .num label{ flex:1;}
+  .num input[type=number]{
+    width:90px; font-family:"Courier New",monospace; font-size:13px; font-weight:bold;
+    padding:5px 6px; border:2px solid var(--cyan); border-radius:8px; color:var(--ink);
+  }
+  .num .unit{ width:26px; color:var(--purple); font-family:"Courier New",monospace;}
+
+  .toggle{ display:flex; align-items:center; gap:10px; margin:12px 0; padding:9px 10px;
+           border:3px dashed var(--cyan); border-radius:14px; background:rgba(0,224,255,.06);}
+  .toggle input{ width:20px;height:20px; accent-color:var(--pink); cursor:pointer;}
+  .toggle .t-txt{ flex:1;}
+  .toggle .t-txt b{ font-size:13px;}
+  .toggle .t-txt small{ display:block; font-size:11px; color:#7a5a92; font-weight:normal; line-height:1.3;}
+  .sub-ctl{ margin:6px 0 2px 4px; padding-left:8px; border-left:3px solid var(--pink-lt);}
+
+  .row{ display:flex; gap:8px; margin-top:12px;}
+  .row button{
+    flex:1; font-family:inherit; font-weight:bold; font-size:12px; cursor:pointer; text-transform:uppercase;
+    padding:9px; border:3px solid var(--ink); border-radius:14px; color:#fff;
+    background:linear-gradient(120deg,var(--cyan),var(--purple)); box-shadow:0 3px 0 rgba(0,0,0,.15);
+  }
+  .row button.ghost{ background:#fff; color:var(--purple);}
+  .row button:active{ transform:translateY(2px); box-shadow:none;}
+
+  .presets{ display:flex; flex-wrap:wrap; gap:7px;}
+  .presets button{
+    font-family:inherit; font-size:11px; font-weight:bold; cursor:pointer; color:var(--ink);
+    padding:7px 11px; border:2px solid var(--ink); border-radius:16px;
+    background:linear-gradient(120deg,var(--yellow),var(--orange)); box-shadow:0 2px 0 rgba(0,0,0,.15);
+  }
+  .presets button:active{ transform:translateY(2px); box-shadow:none;}
+
+  canvas{ display:block; width:100%; border-radius:14px; background:#fff;}
+  .cap-title{ font-size:13px; font-weight:bold; color:var(--purple); margin:0 4px 8px; display:flex; justify-content:space-between; align-items:baseline;}
+  .cap-title span{ font-size:11px; font-weight:normal; color:#7a5a92;}
+  .legend{ display:flex; flex-wrap:wrap; gap:16px; font-size:12px; font-weight:bold; margin:9px 4px 2px;}
+  .legend i{ display:inline-block; width:20px; height:5px; border-radius:3px; vertical-align:2px; margin-right:5px;}
+
+  /* Power readout */
+  .power{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:6px;}
+  .drv{ border:3px solid var(--ink); border-radius:16px; padding:12px; text-align:center; color:#fff;}
+  .drv.woof{ background:linear-gradient(140deg,#ff2fb9,#8b3cff);}
+  .drv.tweet{ background:linear-gradient(140deg,#00e0ff,#8dff2f); color:var(--ink);}
+  .drv .d-name{ font-size:13px; font-weight:bold; letter-spacing:.04em;}
+  .drv .d-w{ font-family:"Courier New",monospace; font-size:26px; font-weight:bold; line-height:1.1;}
+  .drv .d-sub{ font-size:11px; font-family:"Courier New",monospace; opacity:.9;}
+  .probe-note{ text-align:center; font-size:12px; font-weight:bold; margin:10px 0 2px; color:var(--purple);}
+
+  .explain{ font-size:13px; line-height:1.5;}
+  .explain p{ margin:7px 0;}
+  .explain .term{ color:var(--pink); font-weight:bold;}
+  .explain .tag{ display:inline-block; background:var(--lime); color:var(--ink); font-weight:bold;
+                 border-radius:8px; padding:0 6px; font-size:12px; border:2px solid var(--ink);}
+
+  .promptbox{ background:var(--ink); border:4px solid var(--yellow); border-radius:20px;
+              box-shadow:0 0 0 4px var(--pink); overflow:hidden; margin-bottom:14px;}
+  .promptbox .ph{ background:linear-gradient(120deg,var(--pink),var(--purple)); padding:10px 16px;
+                  display:flex; justify-content:space-between; align-items:center;}
+  .promptbox .ph b{ color:#fff; font-size:13px; letter-spacing:.05em;}
+  #copyBtn{ font-family:inherit; font-weight:bold; font-size:12px; cursor:pointer; color:var(--ink);
+            padding:7px 14px; border:2px solid #fff; border-radius:12px; background:var(--yellow);}
+  #copyBtn:active{ transform:translateY(1px);}
+  #promptText{ margin:0; padding:14px 16px; color:#ffe9fb; font-family:"Courier New",monospace;
+               font-size:12px; white-space:pre-wrap; line-height:1.5;}
+</style>
+</head>
+<body>
+<header>
+  <h1>✨ Rainbow Crossover Lab ✨</h1>
+  <p>Split one music signal into a woofer (lows) and a tweeter (highs) — twist the knobs, watch the magic curves.</p>
+</header>
+
+<div class="wrap">
+  <!-- ============ SIDEBAR ============ -->
+  <div>
+    <div class="card">
+      <h2>🎛️ Crossover Design</h2>
+
+      <label class="ctl">Crossover frequency
+        <span class="val" id="fcVal">2500 Hz</span></label>
+      <input type="range" id="fc" min="500" max="8000" step="50" value="2500">
+      <div style="font-size:11px;color:#7a5a92;margin-top:2px;">Below this → woofer. Above → tweeter.</div>
+
+      <h3>Driver impedance</h3>
+      <div class="segbtns" id="impBtns">
+        <button data-r="4">4 Ω</button>
+        <button data-r="6">6 Ω</button>
+        <button data-r="8" class="active">8 Ω</button>
+      </div>
+
+      <h3>Filter slope (order)</h3>
+      <div class="segbtns" id="orderBtns">
+        <button data-o="1">1st · 6 dB/oct</button>
+        <button data-o="2" class="active">2nd · 12 dB/oct</button>
+      </div>
+
+      <h3>Alignment (2nd order)</h3>
+      <div class="segbtns" id="alignBtns">
+        <button data-a="BW" class="active">Butterworth</button>
+        <button data-a="LR">Linkwitz-Riley</button>
+      </div>
+
+      <div class="row">
+        <button id="recalcBtn" class="ghost">↺ Recalc parts from Fc</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🔧 Component Values</h2>
+      <div style="font-size:11px;color:#7a5a92;margin-bottom:4px;">Auto-computed from your design. Edit any number to go manual.</div>
+      <div class="num"><label>Woofer series coil <b>L</b>w</label><input type="number" id="Lw" step="0.01"><span class="unit">mH</span></div>
+      <div class="num" id="CwRow"><label>Woofer shunt cap <b>C</b>w</label><input type="number" id="Cw" step="0.1"><span class="unit">µF</span></div>
+      <div class="num"><label>Tweeter series cap <b>C</b>t</label><input type="number" id="Ct" step="0.1"><span class="unit">µF</span></div>
+      <div class="num" id="LtRow"><label>Tweeter shunt coil <b>L</b>t</label><input type="number" id="Lt" step="0.01"><span class="unit">mH</span></div>
+    </div>
+
+    <div class="card">
+      <h2>➕ Optional Shaping Parts</h2>
+
+      <div class="toggle">
+        <input type="checkbox" id="subOn">
+        <div class="t-txt"><b>🛡️ Subsonic protection cap</b>
+          <small>Series cap on the woofer. Blocks deep subsonic bass that wastes power and over-stretches the cone.</small>
+          <div class="sub-ctl" id="subCtl">
+            <label class="ctl" style="font-size:12px;">High-pass corner
+              <span class="val" id="subVal">25 Hz</span></label>
+            <input type="range" id="subFreq" min="10" max="60" step="1" value="25">
+            <div style="font-size:11px;color:#7a5a92;">≈ <b id="subCapVal">—</b> capacitor</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="toggle">
+        <input type="checkbox" id="lpadOn">
+        <div class="t-txt"><b>🔉 Tweeter L-pad (attenuation)</b>
+          <small>Tweeters are usually louder than woofers. Two resistors turn the tweeter down to match.</small>
+          <div class="sub-ctl" id="lpadCtl">
+            <label class="ctl" style="font-size:12px;">Attenuation
+              <span class="val" id="lpadVal">3.0 dB</span></label>
+            <input type="range" id="lpadDb" min="0" max="12" step="0.5" value="3">
+            <div style="font-size:11px;color:#7a5a92;">R series <b id="rsVal">—</b> · R shunt <b id="rpVal">—</b></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="toggle">
+        <input type="checkbox" id="polOn">
+        <div class="t-txt"><b>🔀 Reverse tweeter polarity</b>
+          <small>Flips tweeter +/–. With 2nd-order filters this often fixes the dip at the crossover point.</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🎚️ Amp &amp; Probe</h2>
+      <label class="ctl">Amp output
+        <span class="val" id="ampVal">2.83 Vrms</span></label>
+      <input type="range" id="amp" min="1" max="40" step="0.5" value="2.83">
+      <div style="font-size:11px;color:#7a5a92;">2.83 V = 1 W into 8 Ω (the standard reference).</div>
+
+      <label class="ctl">Probe frequency
+        <span class="val" id="probeVal">2500 Hz</span></label>
+      <input type="range" id="probe" min="20" max="20000" step="1" value="2500">
+      <div style="font-size:11px;color:#7a5a92;">Or click anywhere on the response graph.</div>
+    </div>
+
+    <div class="card">
+      <h2>🌈 Presets</h2>
+      <div class="presets" id="presets">
+        <button data-p="classic">Classic 2-way</button>
+        <button data-p="gentle">Gentle 1st order</button>
+        <button data-p="protected">Protected woofer</button>
+        <button data-p="bright">Tame bright tweeter</button>
+        <button data-p="lr">Linkwitz-Riley</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MAIN ============ -->
+  <div>
+    <div class="card">
+      <div class="cap-title">🔌 The Crossover Network <span id="schemCaption">Signal in → splits to two filtered paths</span></div>
+      <canvas id="schematic" width="900" height="300"></canvas>
+    </div>
+
+    <div class="card">
+      <div class="cap-title">📈 Frequency Response <span>How loud each driver plays vs. pitch (dB relative to input)</span></div>
+      <canvas id="plot" width="900" height="420"></canvas>
+      <div class="legend">
+        <span><i style="background:linear-gradient(90deg,#ff2fb9,#8b3cff)"></i>Woofer</span>
+        <span><i style="background:linear-gradient(90deg,#00b7ff,#8dff2f)"></i>Tweeter</span>
+        <span><i style="background:#3a1150"></i>Summed (both together)</span>
+        <span><i style="background:var(--yellow)"></i>Crossover Fc</span>
+        <span><i style="background:var(--orange)"></i>Probe</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="cap-title">⚡ Power Split at the Probe <span id="powerCaption"></span></div>
+      <div class="probe-note" id="probeNote">At <b>2500 Hz</b> with a <b>2.83 V</b> input:</div>
+      <div class="power">
+        <div class="drv woof"><div class="d-name">🔊 WOOFER</div><div class="d-w" id="pw">— W</div><div class="d-sub" id="pwSub"></div></div>
+        <div class="drv tweet"><div class="d-name">🔈 TWEETER</div><div class="d-w" id="pt">— W</div><div class="d-sub" id="ptSub"></div></div>
+      </div>
+    </div>
+
+    <div class="card explain">
+      <h2>💡 What's Happening?</h2>
+      <div id="explainBody">
+        <p>A <span class="term">passive crossover</span> sits between your amplifier and the two drivers. It uses only coils and capacitors — no power of its own — to send each driver the range of frequencies it handles well.</p>
+        <p>A <span class="term">capacitor</span> passes highs and blocks lows, so a series cap feeds the <span class="tag">tweeter</span>. An <span class="term">inductor (coil)</span> passes lows and blocks highs, so a series coil feeds the <span class="tag">woofer</span>. That's the whole trick.</p>
+        <p><span class="term">Order</span> = how steeply it rolls off. 1st order (one part) = 6 dB/octave, gentle. 2nd order (two parts) = 12 dB/octave, steeper and cleaner separation.</p>
+      </div>
+    </div>
+
+    <div class="promptbox">
+      <div class="ph"><b>🤖 Ask Claude to go deeper</b><button id="copyBtn">Copy</button></div>
+      <pre id="promptText"></pre>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   COMPLEX ARITHMETIC  (impedances are complex: R real, jX imaginary)
+   ========================================================================= */
+const cx = (re,im)=>({re,im});
+const cadd=(a,b)=>cx(a.re+b.re, a.im+b.im);
+const cmul=(a,b)=>cx(a.re*b.re-a.im*b.im, a.re*b.im+a.im*b.re);
+const cdiv=(a,b)=>{ const d=b.re*b.re+b.im*b.im; return cx((a.re*b.re+a.im*b.im)/d,(a.im*b.re-a.re*b.im)/d); };
+const cmag=a=>Math.hypot(a.re,a.im);
+const cpar=(a,b)=>cdiv(cmul(a,b),cadd(a,b));         // parallel impedance
+// element impedances at angular freq w
+const zR = R      => cx(R,0);
+const zL = (w,L)  => cx(0, w*L);
+const zC = (w,C)  => cx(0, -1/(w*C));
+
+/* =========================================================================
+   STATE
+   ========================================================================= */
+const DEF = { fc:2500, R:8, order:2, align:'BW', pol:false, amp:2.83, probe:2500,
+              sub:false, subFreq:25, lpad:false, lpadDb:3 };
+const state = Object.assign({}, DEF);
+// component values stored in SI base units (Henries, Farads)
+let parts = { Lw:0, Cw:0, Ct:0, Lt:0 };
+let manual = false;
+
+function Qval(){ return state.align==='LR' ? 0.5 : 0.707; }
+
+/* auto-compute parts from crossover design (Butterworth/LR nth order) */
+function autoParts(){
+  const w0 = 2*Math.PI*state.fc, R = state.R, Q = Qval();
+  if(state.order===1){
+    parts.Lw = R/w0;            // woofer series coil
+    parts.Ct = 1/(w0*R);        // tweeter series cap
+    parts.Cw = 0; parts.Lt = 0; // no shunt parts
+  } else {
+    parts.Lw = R/(w0*Q);        // series coil (low-pass)
+    parts.Cw = Q/(w0*R);        // shunt cap  (low-pass)
+    parts.Ct = Q/(w0*R);        // series cap (high-pass)
+    parts.Lt = R/(w0*Q);        // shunt coil (high-pass)
+  }
+  manual = false;
+}
+
+/* extra-part derived values */
+function subCap(){ return 1/(2*Math.PI*state.R*state.subFreq); }   // Farads
+function lpadRes(){
+  const k = Math.pow(10, state.lpadDb/20);          // voltage attenuation factor (>=1)
+  if(k<=1.0001) return {rs:0, rp:Infinity};
+  return { rs: state.R*(k-1)/k, rp: state.R/(k-1) };
+}
+
+/* =========================================================================
+   TRANSFER FUNCTIONS  (voltage across each driver / input voltage)
+   Amp = ideal source. Drivers modeled as their nominal resistance.
+   ========================================================================= */
+function Hwoofer(f){
+  const w = 2*Math.PI*f, R = state.R;
+  // series path: [subsonic cap?] + series coil Lw
+  let series = zL(w, parts.Lw);
+  if(state.sub) series = cadd(zC(w, subCap()), series);
+  // shunt at node: woofer R, parallel shunt cap Cw (2nd order)
+  let shunt = zR(R);
+  if(state.order===2 && parts.Cw>0) shunt = cpar(shunt, zC(w, parts.Cw));
+  return cdiv(shunt, cadd(series, shunt));           // node voltage / Vin = woofer voltage / Vin
+}
+function Htweeter(f){
+  const w = 2*Math.PI*f, R = state.R;
+  const lp = lpadRes();
+  // series path: series cap Ct + [L-pad series R?]
+  let series = zC(w, parts.Ct);
+  if(state.lpad && lp.rs>0) series = cadd(series, zR(lp.rs));
+  // shunt at node: tweeter R, parallel shunt coil Lt (2nd order), parallel L-pad shunt R?
+  let shunt = zR(R);
+  if(state.order===2 && parts.Lt>0) shunt = cpar(shunt, zL(w, parts.Lt));
+  if(state.lpad && isFinite(lp.rp))  shunt = cpar(shunt, zR(lp.rp));
+  return cdiv(shunt, cadd(series, shunt));
+}
+const db = m => 20*Math.log10(Math.max(m,1e-6));
+
+/* =========================================================================
+   PLOT
+   ========================================================================= */
+const plotCv = document.getElementById('plot');
+const schemCv= document.getElementById('schematic');
+let P, S;
+function fit(cv){
+  const dpr=window.devicePixelRatio||1;
+  const cssW=cv.clientWidth||cv.width, ratio=cv.height/cv.width, cssH=cssW*ratio;
+  cv.style.height=cssH+'px'; cv.width=Math.round(cssW*dpr); cv.height=Math.round(cssH*dpr);
+  const ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  return {ctx,W:cssW,H:cssH};
+}
+function relayout(){ P=fit(plotCv); S=fit(schemCv); draw(); }
+window.addEventListener('resize', relayout);
+
+const FMIN=20, FMAX=20000, DBMAX=6, DBMIN=-42;
+function pad(){ return {l:52,r:16,t:14,b:34}; }
+function fToX(f){ const p=pad(); const w=P.W-p.l-p.r;
+  return p.l + Math.log10(f/FMIN)/Math.log10(FMAX/FMIN)*w; }
+function xToF(x){ const p=pad(); const w=P.W-p.l-p.r;
+  return FMIN*Math.pow(FMAX/FMIN,(x-p.l)/w); }
+function dbToY(d){ const p=pad(); const h=P.H-p.t-p.b;
+  return p.t + (DBMAX-d)/(DBMAX-DBMIN)*h; }
+
+function drawPlot(){
+  const {ctx,W,H}=P; const p=pad();
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+
+  // grid
+  ctx.strokeStyle='#eddcff'; ctx.fillStyle='#9a78b8'; ctx.lineWidth=1;
+  ctx.font='11px Courier New';
+  const decades=[20,50,100,200,500,1000,2000,5000,10000,20000];
+  decades.forEach(f=>{
+    const x=fToX(f); ctx.beginPath(); ctx.moveTo(x,p.t); ctx.lineTo(x,H-p.b); ctx.stroke();
+    ctx.textAlign='center';
+    ctx.fillText(f>=1000?(f/1000)+'k':f, x, H-p.b+14);
+  });
+  for(let d=DBMAX; d>=DBMIN; d-=6){
+    const y=dbToY(d);
+    ctx.strokeStyle = d===0?'#c9a8ff':'#f0e6ff'; ctx.lineWidth=d===0?2:1;
+    ctx.beginPath(); ctx.moveTo(p.l,y); ctx.lineTo(W-p.r,y); ctx.stroke();
+    ctx.fillStyle='#9a78b8'; ctx.textAlign='right'; ctx.fillText(d+'dB', p.l-6, y+3);
+  }
+
+  // Fc marker
+  const xfc=fToX(state.fc);
+  ctx.strokeStyle='#ffcf00'; ctx.lineWidth=3; ctx.setLineDash([6,4]);
+  ctx.beginPath(); ctx.moveTo(xfc,p.t); ctx.lineTo(xfc,H-p.b); ctx.stroke(); ctx.setLineDash([]);
+
+  // curves
+  const N=260;
+  const curve=(fn,grad)=>{
+    ctx.lineWidth=4; ctx.strokeStyle=grad; ctx.beginPath();
+    for(let i=0;i<=N;i++){
+      const f=FMIN*Math.pow(FMAX/FMIN,i/N);
+      const y=dbToY(db(cmag(fn(f))));
+      const x=fToX(f);
+      i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+    }
+    ctx.stroke();
+  };
+  const gW=ctx.createLinearGradient(p.l,0,W-p.r,0);
+  gW.addColorStop(0,'#ff2fb9'); gW.addColorStop(1,'#8b3cff');
+  const gT=ctx.createLinearGradient(p.l,0,W-p.r,0);
+  gT.addColorStop(0,'#00b7ff'); gT.addColorStop(1,'#8dff2f');
+
+  // summed (complex sum, respect tweeter polarity)
+  ctx.lineWidth=2.5; ctx.strokeStyle='rgba(58,17,80,.7)'; ctx.setLineDash([3,3]); ctx.beginPath();
+  for(let i=0;i<=N;i++){
+    const f=FMIN*Math.pow(FMAX/FMIN,i/N);
+    const s=state.pol?-1:1;
+    const sum=cadd(Hwoofer(f), cmul(cx(s,0), Htweeter(f)));
+    const y=dbToY(db(cmag(sum))), x=fToX(f);
+    i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+  }
+  ctx.stroke(); ctx.setLineDash([]);
+
+  curve(Hwoofer,gW);
+  curve(Htweeter,gT);
+
+  // probe marker + dots
+  const xpr=fToX(state.probe);
+  ctx.strokeStyle='#ff7a3c'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(xpr,p.t); ctx.lineTo(xpr,H-p.b); ctx.stroke();
+  const yw=dbToY(db(cmag(Hwoofer(state.probe)))), yt=dbToY(db(cmag(Htweeter(state.probe))));
+  [[yw,'#ff2fb9'],[yt,'#00b7ff']].forEach(([y,c])=>{
+    ctx.beginPath(); ctx.fillStyle=c; ctx.arc(xpr,y,6,0,6.28); ctx.fill();
+    ctx.lineWidth=2; ctx.strokeStyle='#fff'; ctx.stroke();
+  });
+}
+
+/* =========================================================================
+   SCHEMATIC
+   ========================================================================= */
+function fmtL(H){ return (H*1000).toFixed(H*1000<1?2:1)+' mH'; }
+function fmtC(F){ const uf=F*1e6; return (uf<10?uf.toFixed(2):uf.toFixed(1))+' µF'; }
+function fmtR(R){ return R.toFixed(R<10?1:0)+' Ω'; }
+
+function drawSchematic(){
+  const {ctx,W,H}=S;
+  ctx.clearRect(0,0,W,H); ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  const wire=(x1,y1,x2,y2)=>{ ctx.strokeStyle='#3a1150'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); };
+  const label=(t,x,y,col)=>{ ctx.fillStyle=col||'#8b3cff'; ctx.font='bold 12px Courier New';
+    ctx.textAlign='center'; ctx.fillText(t,x,y); ctx.textAlign='left'; };
+
+  const srcX=54, splitX=150, endX=W-70;
+  const tY=70, wY=230, midY=150, gndY=280;
+
+  // source
+  ctx.strokeStyle='#3a1150'; ctx.lineWidth=3; ctx.fillStyle='#fff';
+  ctx.beginPath(); ctx.arc(srcX,midY,22,0,6.28); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle='#ff2fb9'; ctx.lineWidth=2.5; ctx.beginPath();
+  for(let i=-14;i<=14;i++){ const yy=midY-Math.sin(i/14*Math.PI*2)*9; i===-14?ctx.moveTo(srcX+i,yy):ctx.lineTo(srcX+i,yy);} ctx.stroke();
+  label('AMP', srcX, midY+40, '#3a1150');
+  label(state.amp.toFixed(2)+'V', srcX, midY+54, '#8b3cff');
+
+  wire(srcX+22,midY, splitX,midY);
+  ctx.fillStyle='#3a1150'; ctx.beginPath(); ctx.arc(splitX,midY,4,0,6.28); ctx.fill();
+  wire(splitX,midY, splitX,tY); wire(splitX,midY, splitX,wY);
+
+  // ---- TWEETER branch (top) ----
+  let x=splitX;
+  if(state.sub){} // (subsonic is on woofer, not tweeter)
+  wire(x,tY, x+40,tY); x+=40;
+  x=capSym(ctx,x,tY,'Ct',fmtC(parts.Ct),'#00b7ff');
+  if(state.lpad && lpadRes().rs>0){ wire(x,tY,x+18,tY); x+=18; x=resSym(ctx,x,tY,'Rs',fmtR(lpadRes().rs),'#ff7a3c'); }
+  // shunt coil (2nd order) at this node down toward ground
+  let twNode=x+30;
+  wire(x,tY, twNode,tY);
+  if(state.order===2){ shuntInductor(ctx, twNode, tY, gndY, 'Lt', fmtL(parts.Lt)); }
+  if(state.lpad && isFinite(lpadRes().rp)){ shuntResistor(ctx, twNode+ (state.order===2?26:0), tY, gndY, 'Rp', fmtR(lpadRes().rp)); }
+  wire(twNode,tY, endX,tY);
+  driver(ctx,endX,tY,'TWEETER','#00e0ff');
+
+  // ---- WOOFER branch (bottom) ----
+  x=splitX;
+  if(state.sub){ wire(x,wY,x+30,wY); x+=30; x=capSym(ctx,x,wY,'Csub',fmtC(subCap()),'#8dff2f'); }
+  wire(x,wY, x+18,wY); x+=18;
+  x=inductorSym(ctx,x,wY,'Lw',fmtL(parts.Lw),'#ff2fb9');
+  let wfNode=x+30; wire(x,wY, wfNode,wY);
+  if(state.order===2){ shuntCap(ctx, wfNode, wY, gndY, 'Cw', fmtC(parts.Cw)); }
+  wire(wfNode,wY, endX,wY);
+  driver(ctx,endX,wY,'WOOFER','#ff2fb9');
+
+  // ground rail
+  wire(srcX,midY, srcX,gndY); wire(srcX,gndY, endX+4,gndY);
+  ctx.strokeStyle='#3a1150'; ctx.lineWidth=3;
+  [0,1,2].forEach(i=>{ ctx.beginPath(); ctx.moveTo(endX+4-i*4-2, gndY+i*4); ctx.lineTo(endX+4+i*4+2,gndY+i*4);}); ctx.stroke();
+}
+// --- symbol helpers (return new x after the symbol) ---
+function capSym(ctx,x,y,name,val,col){
+  const w=26; ctx.strokeStyle=col; ctx.lineWidth=4;
+  ctx.beginPath(); ctx.moveTo(x+w/2-4,y-13); ctx.lineTo(x+w/2-4,y+13); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x+w/2+4,y-13); ctx.lineTo(x+w/2+4,y+13); ctx.stroke();
+  ctx.strokeStyle='#3a1150'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+w/2-4,y); ctx.moveTo(x+w/2+4,y); ctx.lineTo(x+w,y); ctx.stroke();
+  lbl(ctx,name,val,x+w/2,y-20,col); return x+w;
+}
+function inductorSym(ctx,x,y,name,val,col){
+  const w=52; ctx.strokeStyle=col; ctx.lineWidth=3.5; ctx.beginPath();
+  ctx.moveTo(x,y);
+  for(let i=0;i<4;i++){ const cx0=x+8+i*12; ctx.arc(cx0,y-6,6,Math.PI,0,false); }
+  ctx.stroke();
+  lbl(ctx,name,val,x+w/2,y-20,col); return x+w;
+}
+function resSym(ctx,x,y,name,val,col){
+  const w=40; ctx.strokeStyle=col; ctx.lineWidth=3.5; ctx.beginPath(); ctx.moveTo(x,y);
+  for(let i=0;i<=6;i++){ ctx.lineTo(x+i*(w/6), y+(i%2?-8:8)); } ctx.lineTo(x+w,y); ctx.stroke();
+  lbl(ctx,name,val,x+w/2,y-16,col); return x+w;
+}
+function shuntCap(ctx,x,y,gndY,name,val){
+  ctx.strokeStyle='#3a1150'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(x,y,4,0,6.28); ctx.fillStyle='#3a1150'; ctx.fill();
+  const my=(y+gndY)/2; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x,my-6); ctx.stroke();
+  ctx.strokeStyle='#8b3cff'; ctx.lineWidth=4;
+  ctx.beginPath(); ctx.moveTo(x-11,my-6); ctx.lineTo(x+11,my-6); ctx.moveTo(x-11,my+2); ctx.lineTo(x+11,my+2); ctx.stroke();
+  ctx.strokeStyle='#3a1150'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(x,my+2); ctx.lineTo(x,gndY); ctx.stroke();
+  lbl(ctx,name,val,x+38,my,'#8b3cff');
+  gsym(ctx,x,gndY);
+}
+function shuntInductor(ctx,x,y,gndY,name,val){
+  ctx.strokeStyle='#3a1150'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(x,y,4,0,6.28); ctx.fillStyle='#3a1150'; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x,y+14); ctx.stroke();
+  ctx.strokeStyle='#00b7ff'; ctx.lineWidth=3.5; ctx.beginPath();
+  for(let i=0;i<4;i++){ ctx.arc(x+6,y+20+i*12,6,-Math.PI/2,Math.PI/2,false); } ctx.stroke();
+  ctx.strokeStyle='#3a1150'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(x,y+68); ctx.lineTo(x,gndY); ctx.stroke();
+  lbl(ctx,name,val,x+40,y+34,'#00b7ff');
+  gsym(ctx,x,gndY);
+}
+function shuntResistor(ctx,x,y,gndY,name,val){
+  ctx.strokeStyle='#3a1150'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(x,y,4,0,6.28); ctx.fillStyle='#3a1150'; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x,y+14); ctx.stroke();
+  ctx.strokeStyle='#ff7a3c'; ctx.lineWidth=3.5; ctx.beginPath(); ctx.moveTo(x,y+14);
+  for(let i=0;i<=6;i++){ ctx.lineTo(x+(i%2?8:-8), y+20+i*7); } ctx.lineTo(x,y+64); ctx.stroke();
+  ctx.strokeStyle='#3a1150'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(x,y+64); ctx.lineTo(x,gndY); ctx.stroke();
+  lbl(ctx,name,val,x+40,y+38,'#ff7a3c');
+  gsym(ctx,x,gndY);
+}
+function gsym(ctx,x,gndY){ ctx.strokeStyle='#3a1150'; ctx.lineWidth=3;
+  [0,1,2].forEach(i=>{ ctx.beginPath(); ctx.moveTo(x-8+i*3, gndY+i*4); ctx.lineTo(x+8-i*3,gndY+i*4); ctx.stroke(); }); }
+function driver(ctx,x,y,name,col){
+  ctx.strokeStyle='#3a1150'; ctx.lineWidth=3; ctx.fillStyle=col;
+  ctx.beginPath(); ctx.moveTo(x,y-11); ctx.lineTo(x,y+11); ctx.lineTo(x+14,y+22); ctx.lineTo(x+14,y-22); ctx.closePath();
+  ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#3a1150'; ctx.font='bold 11px Courier New'; ctx.textAlign='left';
+  ctx.fillText(name, x-6, y+38);
+}
+function lbl(ctx,name,val,x,y,col){
+  ctx.fillStyle=col; ctx.font='bold 12px Courier New'; ctx.textAlign='center';
+  ctx.fillText(name, x, y); ctx.fillStyle='#3a1150'; ctx.font='11px Courier New';
+  ctx.fillText(val, x, y+13); ctx.textAlign='left';
+}
+
+/* =========================================================================
+   POWER READOUT + PROMPT + UI SYNC
+   ========================================================================= */
+const el=id=>document.getElementById(id);
+function updatePower(){
+  const f=state.probe, V=state.amp, R=state.R;
+  const hw=cmag(Hwoofer(f)), ht=cmag(Htweeter(f));
+  const Pw=(V*hw)*(V*hw)/R, Pt=(V*ht)*(V*ht)/R;
+  const tot=Pw+Pt;
+  el('probeNote').innerHTML=`At <b>${fmtHz(f)}</b> with a <b>${V.toFixed(2)} V</b> input:`;
+  el('pw').textContent = Pw>=0.01? Pw.toFixed(2)+' W' : (Pw*1000).toFixed(1)+' mW';
+  el('pt').textContent = Pt>=0.01? Pt.toFixed(2)+' W' : (Pt*1000).toFixed(1)+' mW';
+  el('pwSub').textContent = `${db(hw).toFixed(1)} dB · ${tot>0?Math.round(Pw/tot*100):0}%`;
+  el('ptSub').textContent = `${db(ht).toFixed(1)} dB · ${tot>0?Math.round(Pt/tot*100):0}%`;
+  el('powerCaption').textContent = f<state.fc? 'Woofer territory 🔊' : 'Tweeter territory 🔈';
+}
+function fmtHz(f){ return f>=1000?(f/1000).toFixed(f%1000?1:0)+' kHz':Math.round(f)+' Hz'; }
+
+function syncComponentInputs(){
+  el('Lw').value=(parts.Lw*1000).toFixed(3);
+  el('Cw').value=(parts.Cw*1e6).toFixed(2);
+  el('Ct').value=(parts.Ct*1e6).toFixed(2);
+  el('Lt').value=(parts.Lt*1000).toFixed(3);
+  // grey out shunt parts for 1st order
+  const on2=state.order===2;
+  el('Cw').disabled=!on2; el('Lt').disabled=!on2;
+  el('CwRow').style.opacity=on2?1:.4; el('LtRow').style.opacity=on2?1:.4;
+}
+
+function draw(){ drawSchematic(); drawPlot(); }
+function refresh(){ draw(); updatePower(); updatePrompt(); }
+
+/* ---- control wiring ---- */
+el('fc').addEventListener('input',e=>{ state.fc=+e.target.value; el('fcVal').textContent=state.fc+' Hz';
+  autoParts(); syncComponentInputs(); refresh(); });
+el('probe').addEventListener('input',e=>{ state.probe=+e.target.value; el('probeVal').textContent=fmtHz(state.probe); refresh(); });
+el('amp').addEventListener('input',e=>{ state.amp=+e.target.value; el('ampVal').textContent=state.amp.toFixed(2)+' Vrms'; refresh(); });
+
+document.querySelectorAll('#impBtns button').forEach(b=>b.addEventListener('click',()=>{
+  setActive('#impBtns',b); state.R=+b.dataset.r; autoParts(); syncComponentInputs(); refresh(); }));
+document.querySelectorAll('#orderBtns button').forEach(b=>b.addEventListener('click',()=>{
+  setActive('#orderBtns',b); state.order=+b.dataset.o; autoParts(); syncComponentInputs(); refresh(); }));
+document.querySelectorAll('#alignBtns button').forEach(b=>b.addEventListener('click',()=>{
+  setActive('#alignBtns',b); state.align=b.dataset.a; autoParts(); syncComponentInputs(); refresh(); }));
+
+el('recalcBtn').addEventListener('click',()=>{ autoParts(); syncComponentInputs(); refresh(); });
+
+// manual component edits
+const editMap={Lw:['Lw',1e-3],Cw:['Cw',1e-6],Ct:['Ct',1e-6],Lt:['Lt',1e-3]};
+Object.keys(editMap).forEach(id=>{
+  el(id).addEventListener('input',e=>{
+    const [key,scale]=editMap[id]; const v=parseFloat(e.target.value);
+    if(!isNaN(v)&&v>0){ parts[key]=v*scale; manual=true; refresh(); }
+  });
+});
+
+// toggles
+el('subOn').addEventListener('change',e=>{ state.sub=e.target.checked; el('subCtl').style.display=state.sub?'block':'none'; refresh(); });
+el('subFreq').addEventListener('input',e=>{ state.subFreq=+e.target.value; el('subVal').textContent=state.subFreq+' Hz';
+  el('subCapVal').textContent=fmtC(subCap()); refresh(); });
+el('lpadOn').addEventListener('change',e=>{ state.lpad=e.target.checked; el('lpadCtl').style.display=state.lpad?'block':'none'; updateLpadLabels(); refresh(); });
+el('lpadDb').addEventListener('input',e=>{ state.lpadDb=+e.target.value; el('lpadVal').textContent=state.lpadDb.toFixed(1)+' dB'; updateLpadLabels(); refresh(); });
+el('polOn').addEventListener('change',e=>{ state.pol=e.target.checked; refresh(); });
+
+function updateLpadLabels(){ const lp=lpadRes();
+  el('rsVal').textContent = lp.rs>0?fmtR(lp.rs):'—';
+  el('rpVal').textContent = isFinite(lp.rp)?fmtR(lp.rp):'—'; }
+
+function setActive(sel,btn){ document.querySelectorAll(sel+' button').forEach(x=>x.classList.remove('active')); btn.classList.add('active'); }
+
+// click plot to set probe
+plotCv.addEventListener('click',e=>{
+  const rect=plotCv.getBoundingClientRect(); const x=e.clientX-rect.left;
+  let f=Math.round(xToF(x)); f=Math.max(FMIN,Math.min(FMAX,f));
+  state.probe=f; el('probe').value=f; el('probeVal').textContent=fmtHz(f); refresh();
+});
+
+/* ---- presets ---- */
+const PRESETS={
+  classic:{fc:2500,R:8,order:2,align:'BW',sub:false,lpad:false,pol:false},
+  gentle: {fc:3500,R:8,order:1,align:'BW',sub:false,lpad:false,pol:false},
+  protected:{fc:2200,R:8,order:2,align:'BW',sub:true,subFreq:28,lpad:false,pol:false},
+  bright: {fc:2800,R:8,order:2,align:'BW',sub:false,lpad:true,lpadDb:4,pol:true},
+  lr:     {fc:2000,R:8,order:2,align:'LR',sub:false,lpad:false,pol:true},
+};
+document.querySelectorAll('#presets button').forEach(b=>b.addEventListener('click',()=>{
+  const p=PRESETS[b.dataset.p]; if(!p) return;
+  Object.assign(state, {sub:false,lpad:false,pol:false}, p);
+  // reflect in UI
+  el('fc').value=state.fc; el('fcVal').textContent=state.fc+' Hz';
+  el('subOn').checked=state.sub; el('subCtl').style.display=state.sub?'block':'none';
+  if(p.subFreq){ state.subFreq=p.subFreq; el('subFreq').value=p.subFreq; el('subVal').textContent=p.subFreq+' Hz'; }
+  el('lpadOn').checked=state.lpad; el('lpadCtl').style.display=state.lpad?'block':'none';
+  if(p.lpadDb!=null){ state.lpadDb=p.lpadDb; el('lpadDb').value=p.lpadDb; el('lpadVal').textContent=p.lpadDb.toFixed(1)+' dB'; }
+  el('polOn').checked=state.pol;
+  document.querySelectorAll('#impBtns button').forEach(x=>x.classList.toggle('active',+x.dataset.r===state.R));
+  document.querySelectorAll('#orderBtns button').forEach(x=>x.classList.toggle('active',+x.dataset.o===state.order));
+  document.querySelectorAll('#alignBtns button').forEach(x=>x.classList.toggle('active',x.dataset.a===state.align));
+  el('subCapVal').textContent=fmtC(subCap()); updateLpadLabels();
+  autoParts(); syncComponentInputs(); refresh();
+}));
+
+/* ---- prompt ---- */
+function updatePrompt(){
+  const parts_=[];
+  parts_.push(`I'm designing a 2-way passive speaker crossover in an interactive simulator.`);
+  parts_.push(`Design: ${state.order===1?'1st-order (6 dB/oct)':'2nd-order (12 dB/oct)'} ${state.order===2?state.align+' alignment, ':''}crossover at ${state.fc} Hz into ${state.R} Ω drivers.`);
+  let comp=`Component values: woofer series coil Lw = ${fmtL(parts.Lw)}`;
+  if(state.order===2) comp+=`, woofer shunt cap Cw = ${fmtC(parts.Cw)}`;
+  comp+=`; tweeter series cap Ct = ${fmtC(parts.Ct)}`;
+  if(state.order===2) comp+=`, tweeter shunt coil Lt = ${fmtL(parts.Lt)}`;
+  comp+='.';
+  parts_.push(comp);
+  const extras=[];
+  if(state.sub) extras.push(`a subsonic protection cap high-passing the woofer at ~${state.subFreq} Hz (${fmtC(subCap())})`);
+  if(state.lpad) extras.push(`a tweeter L-pad attenuating ${state.lpadDb.toFixed(1)} dB (Rseries ${fmtR(lpadRes().rs)}, Rshunt ${fmtR(lpadRes().rp)})`);
+  if(state.pol) extras.push(`the tweeter wired in reverse polarity`);
+  if(extras.length) parts_.push(`Extras: ${extras.join('; ')}.`);
+  if(manual) parts_.push(`(I've hand-tweaked some component values away from the textbook targets.)`);
+  parts_.push(`Explain whether these values make sense, what the summed response looks like through the crossover region (including any dip or bump), and how it would sound. If anything is off, suggest better values and explain the tradeoffs at an introductory level.`);
+  el('promptText').textContent=parts_.join('\n\n');
+}
+
+el('copyBtn').addEventListener('click',()=>{
+  navigator.clipboard.writeText(el('promptText').textContent).then(()=>{
+    const b=el('copyBtn'), o=b.textContent; b.textContent='Copied! ✨'; setTimeout(()=>b.textContent=o,1200);
+  });
+});
+
+/* ---- boot ---- */
+el('subCtl').style.display='none'; el('lpadCtl').style.display='none';
+autoParts(); relayout(); syncComponentInputs(); updateLpadLabels();
+el('subCapVal').textContent=fmtC(subCap());
+refresh();
+</script>
+</body>
+</html>

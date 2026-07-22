@@ -128,6 +128,7 @@
       <div><span class="k" style="background:var(--amber-faint)"></span>de-energized</div>
       <div><span class="k" style="background:var(--amber-glow);border-radius:50%"></span>DC current (flowing dots = electron flow)</div>
       <div><span class="k" style="background:#ff5a2a;border-radius:50%"></span>brushed contact point — friction, wear &amp; arcing</div>
+      <div><span class="k" style="background:var(--amber-glow);border:1px solid var(--amber)"></span>ball bearing — supports the shaft (both types have one)</div>
       <div style="margin-top:6px">Brushed: current physically passes through sliding brush→commutator contacts.<br>
       Brushless: a solid-state DRIVER switches the coils — no sliding contact, no wear.<br>
       Airflow drives motor speed. Aerodynamic load ∝ CFM³. Efficiency: brushed 65%, brushless 88%.</div>
@@ -206,6 +207,18 @@ function blades(cx,cy,n,rIn,rOut,idPrefix){
   return `<g id="${idPrefix}Blades">${s}</g>`;
 }
 
+function bearing(cx,cy,id){
+  let balls='';const N=8,rb=7.5;
+  for(let i=0;i<N;i++){const a=i*(2*Math.PI/N);
+    balls+=`<circle cx="${(cx+rb*Math.sin(a)).toFixed(1)}" cy="${(cy-rb*Math.cos(a)).toFixed(1)}" r="1.9" fill="var(--amber-glow)"/>`;}
+  return `<g>
+    <circle cx="${cx}" cy="${cy}" r="11" fill="#160e01" stroke="var(--amber)" stroke-width="1.4"/>
+    <circle cx="${cx}" cy="${cy}" r="5.5" fill="none" stroke="var(--amber-dim)"/>
+    <g id="${id}Balls">${balls}</g>
+    <circle cx="${cx}" cy="${cy}" r="3.2" fill="var(--amber)"/>
+    <text x="${cx}" y="205" fill="var(--amber-dim)" font-size="9" text-anchor="middle">▲ ball bearing (shaft)</text>
+  </g>`;
+}
 function buildBrushed(){
   const cx=120,cy=120;
   const magnets=`
@@ -251,7 +264,7 @@ function buildBrushed(){
     ${wires}
     ${blades(cx,cy,7,20,104,'brushed')}
     <circle cx="${cx}" cy="${cy}" r="66" fill="var(--bg)" stroke="var(--amber-dim)"/>
-    ${magnets}${arm}${brushes}${wear}
+    ${magnets}${arm}${brushes}${wear}${bearing(120,120,'brushedBrg')}
     <g id="brushedFlow"></g>`;
 }
 
@@ -295,7 +308,7 @@ function buildBrushless(){
     <line x1="132" y1="244" x2="132" y2="178" stroke="var(--amber-dim)" stroke-width="1.4"/>
     <text x="138" y="212" fill="var(--amber-dim)" font-size="8">A B C</text>
     <text x="120" y="238" fill="#7dff7d" font-size="8" text-anchor="middle">no sliding contact · no wear</text>`;
-  return `${rotor}${stator}${driver}<g id="blessFlow"></g>`;
+  return `${rotor}${stator}${driver}${bearing(120,120,'blessBrg')}<g id="blessFlow"></g>`;
 }
 
 /* ---------- current-flow dots ---------- */
@@ -437,6 +450,11 @@ function animate(ts){
     d.el.setAttribute('opacity',running?1:0.28);
   });
   placeDots(flowB);placeDots(flowL);
+
+  // ball-bearing cages orbit slower than the shaft (~0.4x), matching real bearing kinematics
+  const bb1=document.getElementById('brushedBrgBalls'),bb2=document.getElementById('blessBrgBalls');
+  if(bb1)bb1.setAttribute('transform',`rotate(${angleB*0.4} 120 120)`);
+  if(bb2)bb2.setAttribute('transform',`rotate(${angleL*0.4} 120 120)`);
 
   const bBlades=document.getElementById('brushedBlades');
   const bArm=document.getElementById('brushedArm');
