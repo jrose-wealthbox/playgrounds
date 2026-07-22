@@ -109,7 +109,8 @@
 
     <div class="ctl">
       <label>Airflow <span class="val"><span id="cfmVal">60</span> CFM</span></label>
-      <input type="range" id="cfm" min="20" max="110" value="60" step="1">
+      <input type="range" id="cfm" min="0" max="110" value="60" step="1">
+      <div style="font-size:10px;color:var(--amber-dim);margin-top:4px">Slide to 0 to power off &amp; freeze the motors.</div>
     </div>
 
     <div class="ctl">
@@ -125,8 +126,11 @@
     <div class="legend">
       <div><span class="k" style="background:var(--amber)"></span>energized winding / coil</div>
       <div><span class="k" style="background:var(--amber-faint)"></span>de-energized</div>
-      <div>Airflow drives motor speed. Aerodynamic load ∝ CFM³.<br>
-      Efficiency assumed constant: brushed 65%, brushless 88%.</div>
+      <div><span class="k" style="background:var(--amber-glow);border-radius:50%"></span>DC current (flowing dots = electron flow)</div>
+      <div><span class="k" style="background:#ff5a2a;border-radius:50%"></span>brushed contact point — friction, wear &amp; arcing</div>
+      <div style="margin-top:6px">Brushed: current physically passes through sliding brush→commutator contacts.<br>
+      Brushless: a solid-state DRIVER switches the coils — no sliding contact, no wear.<br>
+      Airflow drives motor speed. Aerodynamic load ∝ CFM³. Efficiency: brushed 65%, brushless 88%.</div>
     </div>
   </div>
 
@@ -138,14 +142,14 @@
       <div class="fan">
         <h3 class="glow">Brushed DC</h3>
         <div class="tag">MECHANICAL COMMUTATION · CARBON BRUSHES</div>
-        <svg id="svgBrushed" width="230" height="230" viewBox="0 0 240 240"></svg>
+        <svg id="svgBrushed" width="230" height="264" viewBox="0 0 240 275"></svg>
         <div class="readout" id="roBrushed"></div>
       </div>
       <!-- BRUSHLESS -->
       <div class="fan">
         <h3 class="glow">Brushless DC</h3>
         <div class="tag">ELECTRONIC COMMUTATION · HALL SENSORS</div>
-        <svg id="svgBrushless" width="230" height="230" viewBox="0 0 240 240"></svg>
+        <svg id="svgBrushless" width="230" height="264" viewBox="0 0 240 275"></svg>
         <div class="readout" id="roBrushless"></div>
       </div>
     </div>
@@ -181,7 +185,7 @@ const PRESETS={
 
 /* ---------- helpers ---------- */
 const $=id=>document.getElementById(id);
-const cfmToRpm=cfm=>Math.round(600+(cfm-20)/90*1400);
+const cfmToRpm=cfm=>cfm<=0?0:Math.round(400+cfm/110*1600);
 function model(type){
   const aero=K*Math.pow(state.cfm,3);      // watts of air power
   const input=aero/EFF[type];               // electrical watts
@@ -229,10 +233,26 @@ function buildBrushed(){
     <text x="${cx+8}" y="${cy-32}" fill="var(--amber-dim)" font-size="9">brush</text>
     <path id="spark1" class="spark" d="M${cx},${cy-16} l3,-5 l1,4 l4,-1 l-4,4 l2,4 l-5,-3 l-4,3 l2,-5 l-4,-3 l5,1 z" opacity="0"/>
     <path id="spark2" class="spark" d="M${cx},${cy+16} l3,5 l1,-4 l4,1 l-4,-4 l2,-4 l-5,3 l-4,-3 l2,5 l-4,3 l5,-1 z" opacity="0"/>`;
+  // external DC leads: + up the left edge to top brush, through commutator, out - to bottom-right
+  const wires=`
+    <polyline points="10,268 10,80 112,80" fill="none" stroke="var(--amber-dim)" stroke-width="1.4"/>
+    <polyline points="112,160 230,160 230,268" fill="none" stroke="var(--amber-dim)" stroke-width="1.4"/>
+    <line x1="120" y1="80" x2="120" y2="90" stroke="var(--amber-dim)" stroke-width="1.4"/>
+    <line x1="120" y1="150" x2="120" y2="160" stroke="var(--amber-dim)" stroke-width="1.4"/>
+    <text x="14" y="266" fill="var(--amber-glow)" font-size="11">+DC</text>
+    <text x="204" y="266" fill="var(--amber-glow)" font-size="11">−DC</text>`;
+  // wear / arc markers exactly where each brush slides on the commutator
+  const wear=`
+    <circle id="wear1" cx="120" cy="104" r="7" fill="none" stroke="#ff5a2a" stroke-width="2"/>
+    <circle id="wear2" cx="120" cy="136" r="7" fill="none" stroke="#ff5a2a" stroke-width="2"/>
+    <text x="150" y="120" fill="#ff5a2a" font-size="9">◄ sliding</text>
+    <text x="150" y="130" fill="#ff5a2a" font-size="9">   contact</text>`;
   return `<circle cx="${cx}" cy="${cy}" r="108" fill="none" stroke="var(--line)"/>
+    ${wires}
     ${blades(cx,cy,7,20,104,'brushed')}
     <circle cx="${cx}" cy="${cy}" r="66" fill="var(--bg)" stroke="var(--amber-dim)"/>
-    ${magnets}${arm}${brushes}`;
+    ${magnets}${arm}${brushes}${wear}
+    <g id="brushedFlow"></g>`;
 }
 
 function buildBrushless(){
@@ -262,13 +282,72 @@ function buildBrushless(){
       <circle cx="${cx+40}" cy="${cy+40}" r="4" fill="none" stroke="var(--amber)"/>
       <text x="${cx+46}" y="${cy+44}" fill="var(--amber-dim)" font-size="9">hall</text>
     </g>`;
-  return `${rotor}${stator}`;
+  // solid-state driver (ESC) replaces the brushes: DC in, 3-phase switched out
+  const driver=`
+    <rect x="86" y="244" width="68" height="26" rx="3" fill="#1c1301" stroke="var(--amber)"/>
+    <text x="120" y="261" fill="var(--amber-glow)" font-size="9" text-anchor="middle">DRIVER (ESC)</text>
+    <polyline points="10,268 10,257 86,257" fill="none" stroke="var(--amber-dim)" stroke-width="1.4"/>
+    <polyline points="230,268 230,257 154,257" fill="none" stroke="var(--amber-dim)" stroke-width="1.4"/>
+    <text x="14" y="252" fill="var(--amber-glow)" font-size="11">+DC</text>
+    <text x="204" y="252" fill="var(--amber-glow)" font-size="11">−DC</text>
+    <line x1="108" y1="244" x2="108" y2="178" stroke="var(--amber-dim)" stroke-width="1.4"/>
+    <line x1="120" y1="244" x2="120" y2="178" stroke="var(--amber-dim)" stroke-width="1.4"/>
+    <line x1="132" y1="244" x2="132" y2="178" stroke="var(--amber-dim)" stroke-width="1.4"/>
+    <text x="138" y="212" fill="var(--amber-dim)" font-size="8">A B C</text>
+    <text x="120" y="238" fill="#7dff7d" font-size="8" text-anchor="middle">no sliding contact · no wear</text>`;
+  return `${rotor}${stator}${driver}<g id="blessFlow"></g>`;
 }
+
+/* ---------- current-flow dots ---------- */
+const SVGNS="http://www.w3.org/2000/svg";
+const PATHS_B=[[[10,268],[10,80],[112,80],[120,104],[120,136],[112,160],[230,160],[230,268]]];
+const PATHS_L=[
+  [[10,268],[10,257],[86,257]],       // +DC into driver
+  [[230,268],[230,257],[154,257]],    // -DC into driver
+  [[108,244],[108,178]],              // phase A
+  [[120,244],[120,178]],              // phase B
+  [[132,244],[132,178]],              // phase C
+];
+const SPACING=26;
+function prep(pts){
+  const seg=[];let len=0;
+  for(let i=0;i<pts.length-1;i++){
+    const [x0,y0]=pts[i],[x1,y1]=pts[i+1];
+    const l=Math.hypot(x1-x0,y1-y0);
+    seg.push({x0,y0,dx:(x1-x0)/l,dy:(y1-y0)/l,d0:len,l});
+    len+=l;
+  }
+  return {seg,len};
+}
+function ptAt(path,d){
+  d=((d%path.len)+path.len)%path.len;
+  for(const s of path.seg) if(d<=s.d0+s.l) return [s.x0+s.dx*(d-s.d0),s.y0+s.dy*(d-s.d0)];
+  const s=path.seg[path.seg.length-1];return [s.x0+s.dx*s.l,s.y0+s.dy*s.l];
+}
+function buildFlow(groupId,rawPaths){
+  const g=$(groupId);g.innerHTML='';
+  const paths=rawPaths.map(prep);
+  const dots=[];
+  paths.forEach(p=>{
+    const n=Math.max(1,Math.floor(p.len/SPACING));
+    for(let i=0;i<n;i++){
+      const c=document.createElementNS(SVGNS,'circle');
+      c.setAttribute('r','2.4');c.setAttribute('fill','var(--amber-glow)');
+      c.style.filter='drop-shadow(0 0 4px var(--amber))';
+      g.appendChild(c);
+      dots.push({el:c,path:p,base:i*SPACING});
+    }
+  });
+  return dots;
+}
+let flowB=[],flowL=[];
 
 /* ---------- render ---------- */
 function renderStatic(){
   $('svgBrushed').innerHTML=buildBrushed();
   $('svgBrushless').innerHTML=buildBrushless();
+  flowB=buildFlow('brushedFlow',PATHS_B);
+  flowL=buildFlow('blessFlow',PATHS_L);
 }
 
 function renderReadouts(){
@@ -290,6 +369,11 @@ function renderReadouts(){
     <div class="bar-lbl"><span>Brushless input</span><span>${l.input.toFixed(2)} W</span></div>
     <div class="bar-track"><div class="bar-fill" style="width:${l.input/max*100}%"></div></div>`;
 
+  if(state.cfm<=0){
+    $('verdict').innerHTML=`<b>MOTORS OFF.</b> At 0 CFM both fans are unpowered — no current flows,
+      no draw, no cost. Slide airflow up to energize the windings and watch the DC current move.`;
+    return;
+  }
   const saveW=b.input-l.input;
   const savePct=(saveW/b.input*100);
   const saveYr=b.costYr-l.costYr;
@@ -302,6 +386,12 @@ function renderReadouts(){
 }
 
 function updatePrompt(){
+  if(state.cfm<=0){
+    $('prompt').textContent=`Explain how a brushed DC 120mm fan and a brushless (BLDC) 120mm fan work at rest (0 CFM, powered off): `+
+      `the commutation mechanism each uses, how DC current is routed to the windings, `+
+      `and why the brushed design has sliding brush→commutator contacts that wear and arc while the brushless design uses a solid-state driver with no such contact.`;
+    return;
+  }
   const b=model('brushed'),l=model('brushless');
   const saveYr=b.costYr-l.costYr;
   const savePct=((b.input-l.input)/b.input*100).toFixed(0);
@@ -329,14 +419,24 @@ function updateAll(){
 }
 
 /* ---------- animation ---------- */
-let angleB=0,angleL=0,sparkT=0,last=null;
+let angleB=0,angleL=0,sparkT=0,flowPhase=0,last=null;
 function animate(ts){
   if(last==null)last=ts;
   const dt=(ts-last)/1000; last=ts;
   const rpm=cfmToRpm(state.cfm);
+  const running=rpm>0;
   const degPerSec=rpm*0.6;              // slowed 10x for visibility
   angleB=(angleB+degPerSec*dt)%360;
   angleL=(angleL+degPerSec*dt)%360;
+
+  // current dots travel at a rate tied to speed; frozen when off
+  flowPhase+=(20+rpm*0.06)*dt*(running?1:0);
+  const placeDots=arr=>arr.forEach(d=>{
+    const [x,y]=ptAt(d.path,d.base+flowPhase);
+    d.el.setAttribute('cx',x);d.el.setAttribute('cy',y);
+    d.el.setAttribute('opacity',running?1:0.28);
+  });
+  placeDots(flowB);placeDots(flowL);
 
   const bBlades=document.getElementById('brushedBlades');
   const bArm=document.getElementById('brushedArm');
@@ -346,20 +446,22 @@ function animate(ts){
   const lRotor=document.getElementById('blessRotor');
   if(lRotor)lRotor.setAttribute('transform',`rotate(${angleL} 120 120)`);
 
-  // brushed sparks pulse with commutation (each 60deg segment)
-  sparkT+=dt;
-  const seg=Math.floor(angleB/60);
+  // brushed sparks + wear markers pulse with commutation (each 60deg segment)
+  sparkT+=dt*(running?1:0);
   const s1=document.getElementById('spark1'),s2=document.getElementById('spark2');
-  if(s1){const flash=(angleB%60)<12?1:0;
-    s1.setAttribute('opacity',flash*(0.4+0.6*Math.abs(Math.sin(sparkT*30))));
-    s2.setAttribute('opacity',flash*(0.4+0.6*Math.abs(Math.sin(sparkT*30))));}
+  const w1=document.getElementById('wear1'),w2=document.getElementById('wear2');
+  const flash=running&&(angleB%60)<12?1:0;
+  const glow=0.4+0.6*Math.abs(Math.sin(sparkT*30));
+  if(s1){s1.setAttribute('opacity',flash*glow);s2.setAttribute('opacity',flash*glow);}
+  if(w1){const wp=running?0.55+0.45*Math.abs(Math.sin(sparkT*12)):0.3;
+    w1.setAttribute('opacity',wp);w2.setAttribute('opacity',wp);}
 
   // brushless: energize 2 coils in sequence (electronic commutation)
   const coils=document.querySelectorAll('.statorCoil rect');
   if(coils.length){
     const active=Math.floor(angleL/30)%6;
     coils.forEach((r,i)=>{
-      const on=(i===active||i===(active+3)%6);
+      const on=running&&(i===active||i===(active+3)%6);
       r.setAttribute('fill',on?'var(--amber)':'var(--amber-faint)');
       r.setAttribute('stroke',on?'var(--amber-glow)':'var(--amber-dim)');
       r.style.filter=on?'drop-shadow(0 0 4px var(--amber))':'none';
